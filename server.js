@@ -16,9 +16,9 @@ app.post('/ask-bot', async (req, res) => {
         if (!medicineDb || !userQuery) {
             return res.status(400).json({ error: "البيانات المرسلة ناقصة" });
         }
-
-        // رابط استدعاء نموذج Gemini 1.5 Flash الرسمي
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        // السطر الجديد الصحيح والمستقر
+        // الرابط الصحيح والمضمون لنموذج Gemini 1.5 Flash
+        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
 
         // إعداد هيكلية البيانات (Payload) حسب توثيق جوجل الرسمي
         const requestBody = {
