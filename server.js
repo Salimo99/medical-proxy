@@ -5,7 +5,7 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// ⚠️ ضع مفتاح Gemini API الحقيقي هنا
+// ⚠️ ضع مفتاح Gemini API الحقيقي الخاص بك هنا
 const GEMINI_API_KEY = "AIzaSyCvKl4GgETH480jHRE4BYCVb-1g3zQELJE";
 
 app.post('/ask-bot', async (req, res) => {
@@ -16,8 +16,9 @@ app.post('/ask-bot', async (req, res) => {
             return res.status(400).json({ error: "البيانات المرسلة ناقصة" });
         }
 
-        // الرابط المحدث والجاهز للتشغيل فوراً
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        // الرابط الرسمي المستقر والمعتمد 100%
+        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
         const requestBody = {
             contents: [
                 {
@@ -28,7 +29,7 @@ app.post('/ask-bot', async (req, res) => {
                             
                             الشروط والقيود الصارمة:
                             1. أجب عن أسئلة المستخدم بدقة وبناءً على النص الموجود في قاعدة المعرفة أدناه فقط باللغة العربية.
-                            2. إذا لم تجد الدواء أو المعلومة المطلوبة داخل النص المرفق، يجب أن تجيب حرفياً بهاتين الكلمتين فقط دون أي زيادة أو شرح أو تخمين: "لا أعرف".
+                            2. إذا لم تجد الدواء أو المعلومة المطلوبة داخل النص المرفق، يجب أن تجيب حرفياً بهاتين الكلمتين فقط دون أي زيادة أو شرح: "لا أعرف".
                             3. يمنع منعاً باتاً اختراع جرعات طبية خارج هذا المستند.
 
                             إليك قاعدة المعرفة الكاملة للأدوية:\n${medicineDb}`
@@ -48,9 +49,13 @@ app.post('/ask-bot', async (req, res) => {
             headers: { 'Content-Type': 'application/json' }
         });
 
-        // استخراج النص البرمجي الصحيح من استجابة جوجل
-        const reply = response.data.candidates[0].content.parts[0].text;
-        res.json({ answer: reply });
+        // قراءة الرد بحسب الهيكلية المستقرة لـ v1
+        if (response.data.candidates && response.data.candidates[0].content.parts[0].text) {
+            const reply = response.data.candidates[0].content.parts[0].text;
+            res.json({ answer: reply });
+        } else {
+            res.status(500).json({ error: "استجابة جوجل غير متوقعة الهيكل" });
+        }
 
     } catch (error) {
         console.error("❌ Gemini API Error:", error.response ? error.response.data : error.message);
