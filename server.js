@@ -2,11 +2,10 @@ const express = require('express');
 const axios = require('axios');
 const app = express();
 
-// السماح بأحجام ملفات كبيرة جداً
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// ⚠️ ضع مفتاح Gemini API الجديد الخاص بك هنا
+// ⚠️ ضع مفتاح Gemini API الحقيقي هنا
 const GEMINI_API_KEY = "AIzaSyCvKl4GgETH480jHRE4BYCVb-1g3zQELJE";
 
 app.post('/ask-bot', async (req, res) => {
@@ -16,11 +15,10 @@ app.post('/ask-bot', async (req, res) => {
         if (!medicineDb || !userQuery) {
             return res.status(400).json({ error: "البيانات المرسلة ناقصة" });
         }
-        // السطر الجديد الصحيح والمستقر
-        // الرابط الصحيح والمضمون لنموذج Gemini 1.5 Flash
+
+        // الرابط المحدث والجاهز للتشغيل فوراً
         const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
 
-        // إعداد هيكلية البيانات (Payload) حسب توثيق جوجل الرسمي
         const requestBody = {
             contents: [
                 {
@@ -30,7 +28,7 @@ app.post('/ask-bot', async (req, res) => {
                             text: `أنت مساعد طبي خبير ومخصص للإجابة عن أسئلة الأدوية بالاعتماد الحصري والصارم على سياق قاعدة المعرفة المرفقة أدناه فقط.
                             
                             الشروط والقيود الصارمة:
-                            1. أجب عن أسئلة المستخدم بدقة وبناءً على النص الموجود في قاعدة المعرفة أدناه فقط باللغة العربية الطبيعية.
+                            1. أجب عن أسئلة المستخدم بدقة وبناءً على النص الموجود في قاعدة المعرفة أدناه فقط باللغة العربية.
                             2. إذا لم تجد الدواء أو المعلومة المطلوبة داخل النص المرفق، يجب أن تجيب حرفياً بهاتين الكلمتين فقط دون أي زيادة أو شرح أو تخمين: "لا أعرف".
                             3. يمنع منعاً باتاً اختراع جرعات طبية خارج هذا المستند.
 
@@ -43,7 +41,7 @@ app.post('/ask-bot', async (req, res) => {
                 }
             ],
             generationConfig: {
-                temperature: 0.0 // الالتزام الحرفي بالملف ومنع التخمين
+                temperature: 0.0
             }
         };
 
@@ -51,13 +49,16 @@ app.post('/ask-bot', async (req, res) => {
             headers: { 'Content-Type': 'application/json' }
         });
 
-        // استخراج الإجابة النصية من رد جوجل المعقد
-        const reply = response.data.contents[0].parts[0].text;
+        // استخراج النص البرمجي الصحيح من استجابة جوجل
+        const reply = response.data.candidates[0].content.parts[0].text;
         res.json({ answer: reply });
 
     } catch (error) {
         console.error("❌ Gemini API Error:", error.response ? error.response.data : error.message);
-        res.status(500).json({ error: "حدث خطأ أثناء الاتصال بجوجل" });
+        res.status(500).json({ 
+            error: "حدث خطأ أثناء الاتصال بجوجل",
+            details: error.response ? error.response.data : error.message 
+        });
     }
 });
 
