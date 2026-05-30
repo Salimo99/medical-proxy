@@ -2,7 +2,8 @@ const express = require('express');
 const axios = require('axios');
 const app = express();
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // مفتاح Groq الخاص بك يكون آمناً هنا داخل السيرفر
 const GROQ_API_KEY = "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";
