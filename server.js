@@ -7,7 +7,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // ⚠️ ضع مفتاح Gemini API الحقيقي الخاص بك هنا
-const GEMINI_API_KEY = "AIzaSyCvKl4GgETH480jHRE4BYCVb-1g3zQELJE";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 app.post('/ask-bot', async (req, res) => {
     try {
