@@ -7,17 +7,14 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// قراءة مفتاح OpenRouter من متغيرات البيئة
 const OPENROUTER_API_KEY = process.env.GEMINI_API_KEY;
 
-// ✅ قائمة النماذج المجانية مرتبة حسب الأفضلية
+// ✅ النموذج الرئيسي أولاً، ثم بدائل احتياطية فعلياً نشطة
 const FREE_MODELS = [
-    "google/gemma-4-31b-it:free",
-    "meta-llama/llama-4-scout:free",
-    "meta-llama/llama-4-maverick:free",
-    "deepseek/deepseek-r1:free",
-    "mistralai/mistral-small-3.1-24b-instruct:free",
-    "openai/gpt-oss-120b:free",
+    "openai/gpt-oss-120b:free",      // ✅ الرئيسي - 131K - الأفضل للمهام الطبية
+    "openai/gpt-oss-20b:free",       // ✅ أخف وأسرع من نفس عائلة OpenAI - 131K
+    "google/gemma-4-31b-it:free",    // ✅ 256K - قد يكون متاحاً في أوقات غير الذروة
+    "openrouter/free",               // ✅ يختار OpenRouter أفضل نموذج متاح تلقائياً
 ];
 
 // ─── دالة الإرسال مع Fallback تلقائي ───
@@ -66,8 +63,21 @@ async function callWithFallback(messages) {
             const errMsg = error.response ? JSON.stringify(error.response.data) : error.message;
             console.error(`❌ فشل ${model} (${status}): ${errMsg}`);
 
+            // عند 404: النموذج غير موجود، انتقل فوراً للتالي بدون انتظار
+            if (error.response && error.response.status === 404) {
+                console.log(`🚫 ${model} غير متاح حالياً (404)، الانتقال للتالي فوراً...`);
+                continue;
+            }
+
+            // عند 429: تجاوز الحد، انتظر 3 ثوانٍ
             if (error.response && error.response.status === 429) {
-                console.log('⏳ Rate limit! الانتظار ثانيتين...');
+                console.log('⏳ Rate limit! الانتظار 3 ثوانٍ...');
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            }
+
+            // عند 503: السيرفر مشغول، انتظر ثانيتين
+            if (error.response && error.response.status === 503) {
+                console.log('⏳ السيرفر مشغول (503)! الانتظار ثانيتين...');
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
         }
@@ -85,7 +95,6 @@ app.post('/ask-bot', async (req, res) => {
             return res.status(400).json({ error: "سؤال المستخدم مطلوب" });
         }
 
-        // قراءة ملف الأدوية محلياً من السيرفر
         const filePath = path.join(__dirname, 'drug.md');
         if (!fs.existsSync(filePath)) {
             return res.status(500).json({ error: "ملف قاعدة البيانات غير موجود على السيرفر" });
@@ -188,7 +197,6 @@ app.post('/ask-bot', async (req, res) => {
             }
         ];
 
-        // استدعاء النموذج مع Fallback تلقائي
         const result = await callWithFallback(messages);
 
         if (result) {
@@ -214,6 +222,7 @@ app.post('/ask-bot', async (req, res) => {
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log(`🚀 Medical API Server running on port ${PORT}`);
-    console.log(`📋 النماذج المجهزة: ${FREE_MODELS.length} نموذج مجاني`);
+    console.log(`📋 النماذج المجهزة: ${FREE_MODELS.length} نماذج`);
+    console.log(`🥇 النموذج الرئيسي: openai/gpt-oss-120b:free`);
     console.log(`🔑 API Key: ${OPENROUTER_API_KEY ? '✅ موجود' : '❌ مفقود!'}`);
 });
