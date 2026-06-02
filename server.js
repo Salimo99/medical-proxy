@@ -29,7 +29,7 @@ app.post('/ask-bot', async (req, res) => {
         const url = 'https://openrouter.ai/api/v1/chat/completions';
 
         const requestBody = {
-            model: "meta-llama/llama-3-8b-instruct:free", // النموذج المجاني المثبت والمدعوم في خوادمهم الحالية
+            model: "google/gemma-2-9b-it:free", // 🚀 هذا هو النموذج المجاني الفعال والمدعوم حالياً في السيرفر المباشر
             messages: [
                 {
                     role: "system",
@@ -58,7 +58,6 @@ app.post('/ask-bot', async (req, res) => {
             headers: {
                 'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json',
-                // ترويسات مطلوبة رسمياً للحسابات المجانية لمنع الحظر
                 'HTTP-Referer': 'https://my-medical-proxy-api.onrender.com', 
                 'X-Title': 'Medical Graduation Application'
             }
