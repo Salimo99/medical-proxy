@@ -7,8 +7,8 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// ⚠️ اذهب إلى Render وضع مفتاح Groq الجديد في الـ Environment Variable بنفس الاسم
-const GROQ_API_KEY = process.env.GEMINI_API_KEY; 
+// قراءة المفتاح من متغيرات البيئة بآمان (تأكد من وضع مفتاح OpenRouter في Render)
+const OPENROUTER_API_KEY = process.env.GEMINI_API_KEY;
 
 app.post('/ask-bot', async (req, res) => {
     try {
@@ -25,12 +25,11 @@ app.post('/ask-bot', async (req, res) => {
         }
         const medicineDb = fs.readFileSync(filePath, 'utf8');
 
-        // رابط منصة Groq الرسمية
-        const url = 'https://api.groq.com/openai/v1/chat/completions';
+        // رابط منصة OpenRouter الموحد والرسمي
+        const url = 'https://openrouter.ai/api/v1/chat/completions';
 
-        // هيكلية الطلب القياسية المعتمدة في Groq (تعتمد نظام OpenAI)
         const requestBody = {
-            model: "llama-3.1-8b-instant", // نموذج ميتا الجبار والمجاني بالكامل
+            model: "google/gemini-2.5-flash:free", // النموذج المجاني تماماً ذو السعة المليونية للتوكنز
             messages: [
                 {
                     role: "system",
@@ -59,24 +58,28 @@ app.post('/ask-bot', async (req, res) => {
 
         const response = await axios.post(url, requestBody, {
             headers: {
-                'Authorization': `Bearer ${GROQ_API_KEY}`,
-                'Content-Type': 'application/json'
+                'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json',
+                // ⚠️ الـ Headers المطلوبة رسمياً في توثيق OpenRouter للحسابات المجانية:
+                'HTTP-Referer': 'https://my-medical-proxy-api.onrender.com', 
+                'X-Title': 'Medical Graduation Project'
             }
         });
 
-        // استخراج النص بحسب هيكلية Groq
+        // استخراج النص بحسب الهيكلية القياسية لـ OpenRouter
         if (response.data && response.data.choices && response.data.choices[0].message.content) {
             const reply = response.data.choices[0].message.content;
             res.json({ answer: reply });
         } else {
+            console.error("⚠️ هيكل غير متوقع:", JSON.stringify(response.data));
             res.status(500).json({ error: "استجابة السيرفر غير متوقعة الهيكل" });
         }
 
     } catch (error) {
-        console.error("❌ Groq API Error:", error.response ? error.response.data : error.message);
+        console.error("❌ OpenRouter API Error:", error.response ? error.response.data : error.message);
         res.status(500).json({ error: "حدث خطأ أثناء الاتصال بسيرفر الذكاء الاصطناعي" });
     }
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`Groq Medical Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`OpenRouter Verified Server running on port ${PORT}`));
