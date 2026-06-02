@@ -30,7 +30,7 @@ app.post('/ask-bot', async (req, res) => {
 
         // هيكلية الطلب القياسية المعتمدة في Groq (تعتمد نظام OpenAI)
         const requestBody = {
-            model: "llama-3.3-70b-versatile", // نموذج ميتا الجبار والمجاني بالكامل
+            model: "gemma2-9b-it", // نموذج ميتا الجبار والمجاني بالكامل
             messages: [
                 {
                     role: "system",
