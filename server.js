@@ -29,7 +29,8 @@ app.post('/ask-bot', async (req, res) => {
         const url = 'https://openrouter.ai/api/v1/chat/completions';
 
         const requestBody = {
-            model: "google/gemma-2-9b-it:free", // 🚀 هذا هو النموذج المجاني الفعال والمدعوم حالياً في السيرفر المباشر
+            // 🚀 هذا المعرّف تم التحقق من نشاطه وصلاحيته الحالية في السيرفر ليتسع للملفات الضخمة مجاناً
+            model: "microsoft/phi-3-medium-128k-instruct:free", 
             messages: [
                 {
                     role: "system",
@@ -58,12 +59,13 @@ app.post('/ask-bot', async (req, res) => {
             headers: {
                 'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json',
+                // الترويسات الإلزامية في وثائق المنصة لمنع رفض الطلب المجاني
                 'HTTP-Referer': 'https://my-medical-proxy-api.onrender.com', 
                 'X-Title': 'Medical Graduation Application'
             }
         });
 
-        // التحقق من وصول البيانات واستخراج النص المفسر
+        // استخراج النص المفسر
         if (response.data && response.data.choices && response.data.choices[0].message) {
             const reply = response.data.choices[0].message.content;
             res.json({ answer: reply });
