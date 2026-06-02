@@ -11,14 +11,13 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const OPENROUTER_API_KEY = process.env.GEMINI_API_KEY;
 
 // ✅ قائمة النماذج المجانية مرتبة حسب الأفضلية
-// إذا فشل الأول، يجرب الثاني تلقائياً، وهكذا...
 const FREE_MODELS = [
-    "google/gemma-4-31b-it:free",            // 256K سياق - ممتاز للعربية والمهام الطبية
-    "meta-llama/llama-4-scout:free",          // 512K سياق - سريع ودقيق
-    "meta-llama/llama-4-maverick:free",       // 1M سياق - الأكبر سياقاً
-    "deepseek/deepseek-r1:free",              // 163K سياق - استدلالي قوي جداً
-    "mistralai/mistral-small-3.1-24b-instruct:free", // 128K سياق - خفيف وسريع
-    "openai/gpt-oss-120b:free",              // 131K سياق - مستقر
+    "google/gemma-4-31b-it:free",
+    "meta-llama/llama-4-scout:free",
+    "meta-llama/llama-4-maverick:free",
+    "deepseek/deepseek-r1:free",
+    "mistralai/mistral-small-3.1-24b-instruct:free",
+    "openai/gpt-oss-120b:free",
 ];
 
 // ─── دالة الإرسال مع Fallback تلقائي ───
@@ -42,11 +41,10 @@ async function callWithFallback(messages) {
                         'HTTP-Referer': 'https://my-medical-proxy-api.onrender.com',
                         'X-Title': 'Medical Graduation Application'
                     },
-                    timeout: 120000 // دقيقتان مهلة (الملف كبير 55K توكن)
+                    timeout: 120000
                 }
             );
 
-            // التحقق من أن الرد يحتوي على محتوى فعلي
             if (
                 response.data &&
                 response.data.choices &&
@@ -68,7 +66,6 @@ async function callWithFallback(messages) {
             const errMsg = error.response ? JSON.stringify(error.response.data) : error.message;
             console.error(`❌ فشل ${model} (${status}): ${errMsg}`);
 
-            // إذا كان الخطأ 429 (تجاوز الحد)، انتظر ثانيتين ثم جرب التالي
             if (error.response && error.response.status === 429) {
                 console.log('⏳ Rate limit! الانتظار ثانيتين...');
                 await new Promise(resolve => setTimeout(resolve, 2000));
@@ -76,7 +73,6 @@ async function callWithFallback(messages) {
         }
     }
 
-    // إذا فشلت كل النماذج
     return null;
 }
 
@@ -98,8 +94,8 @@ app.post('/ask-bot', async (req, res) => {
 
         const messages = [
             {
-    role: "system",
-    content: `أنت مساعد طبي ذكي اسمه "طبيبك"، خبير ومحترف، ومخصص للإجابة عن أسئلة الأدوية بالاعتماد الحصري والصارم على سياق قاعدة المعرفة المرفقة أدناه فقط.
+                role: "system",
+                content: `أنت مساعد طبي ذكي اسمه "طبيبك"، خبير ومحترف، ومخصص للإجابة عن أسئلة الأدوية بالاعتماد الحصري والصارم على سياق قاعدة المعرفة المرفقة أدناه فقط.
 
 ══════════════════════
 ⛔ الشروط والقيود الصارمة:
@@ -116,7 +112,8 @@ app.post('/ask-bot', async (req, res) => {
    - لا تستخدم # أو ## أو ### للعناوين أبداً.
    - لا تستخدم ** للنص العريض أبداً.
    - لا تستخدم * أو - لإنشاء القوائم النقطية.
-   - لا تستخدم \`\` أو \`\`\` للأكواد أبداً.
+   - لا تستخدم backticks أو triple backticks للأكواد أبداً.
+   - لا تستخدم أي حرف خاص من أحرف Markdown مطلقاً لأن الواجهة لا تدعم عرضها.
 
 ✅ استخدم بدلاً من ذلك هذا التنسيق الحصري:
 
@@ -153,11 +150,12 @@ app.post('/ask-bot', async (req, res) => {
 
 7. اختم دائماً بدعاء أو تمنيات بالسلامة مع إيموجي 🤲💚
 
-7. لا تستخدم أي حرف خاص من أحرف Markdown مطلقاً لأن الواجهة لا تدعم عرضها.
-
-
 📱 تذكّر: الرد سيظهر في شاشة هاتف محمول داخل فقاعة محادثة (Chat Bubble)، لذا اجعل الأسطر قصيرة ومتباعدة ومريحة للعين.`
-}
+            },
+            {
+                role: "user",
+                content: `إليك قاعدة المعرفة الكاملة للأدوية:\n${medicineDb}\n\nسؤال المستخدم الحالي: ${userQuery}`
+            }
         ];
 
         // استدعاء النموذج مع Fallback تلقائي
@@ -166,7 +164,7 @@ app.post('/ask-bot', async (req, res) => {
         if (result) {
             res.json({
                 answer: result.answer,
-                model_used: result.model_used // مفيد لك في التطوير لمعرفة أي نموذج أجاب
+                model_used: result.model_used
             });
         } else {
             res.status(503).json({
