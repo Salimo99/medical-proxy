@@ -30,7 +30,7 @@ app.post('/ask-bot', async (req, res) => {
 
         const requestBody = {
             // 🚀 هذا المعرّف تم التحقق من نشاطه وصلاحيته الحالية في السيرفر ليتسع للملفات الضخمة مجاناً
-            model: "microsoft/phi-3-medium-128k-instruct:free", 
+            model: "google/gemini-2.5-pro-exp-03-25:free", 
             messages: [
                 {
                     role: "system",
